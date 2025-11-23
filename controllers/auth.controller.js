@@ -56,7 +56,6 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
         throw new Error("No user with that email");
     }
     const resetToken = crypto.randomBytes(20).toString("hex");
-    // store hashed token and expiry in a simple in-memory way (for scaffold) or ideally a collection
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
