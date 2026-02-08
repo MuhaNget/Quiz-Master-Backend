@@ -18,6 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use("/api/v1", require("./routes"));
 
+// Admin panel routes are mounted under /api/v1 in routes/index.js
+
 // Health check
 app.get("/", (req, res) => {
   res.status(200).json({
