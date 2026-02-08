@@ -5,8 +5,15 @@ const User = require("../models/user.model");
 exports.listAdmins = asyncHandler(async (req, res) => {
   const admins = await User.find({
     role: { $in: ["admin", "super_admin"] },
-  }).select("-password");
-  res.json(admins);
+  })
+    .select("-password")
+    .lean();
+  const formattedAdmins = admins.map((a) => ({
+    ...a,
+    fullName: a.fullname,
+    id: a._id,
+  }));
+  res.json(formattedAdmins);
 });
 
 // GET /admins/:id
@@ -14,12 +21,18 @@ exports.getAdmin = asyncHandler(async (req, res) => {
   const admin = await User.findOne({
     _id: req.params.id,
     role: { $in: ["admin", "super_admin"] },
-  }).select("-password");
+  })
+    .select("-password")
+    .lean();
   if (!admin) {
     res.status(404);
     throw new Error("Admin not found");
   }
-  res.json(admin);
+  res.json({
+    ...admin,
+    fullName: admin.fullname,
+    id: admin._id,
+  });
 });
 
 // POST /admins
@@ -37,7 +50,7 @@ exports.createAdmin = asyncHandler(async (req, res) => {
   const admin = await User.create({ fullname, email, password, role: "admin" });
   res.status(201).json({
     id: admin._id,
-    fullname: admin.fullname,
+    fullName: admin.fullname,
     email: admin.email,
     role: admin.role,
   });
@@ -62,7 +75,7 @@ exports.updateAdmin = asyncHandler(async (req, res) => {
 
   res.json({
     id: admin._id,
-    fullname: admin.fullname,
+    fullName: admin.fullname,
     email: admin.email,
     role: admin.role,
   });

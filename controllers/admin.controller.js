@@ -19,7 +19,9 @@ exports.bootstrapAdmin = asyncHandler(async (req, res) => {
     throw new Error("Invalid admin setup key");
   }
 
-  const adminCount = await User.countDocuments({ role: { $in: ["admin", "super_admin"] } });
+  const adminCount = await User.countDocuments({
+    role: { $in: ["admin", "super_admin"] },
+  });
   if (adminCount > 0) {
     res.status(409);
     throw new Error("Admin already exists");
@@ -37,12 +39,17 @@ exports.bootstrapAdmin = asyncHandler(async (req, res) => {
     throw new Error("Email already registered");
   }
 
-  const admin = await User.create({ fullname, email, password, role: "super_admin" });
+  const admin = await User.create({
+    fullname,
+    email,
+    password,
+    role: "super_admin",
+  });
   res.status(201).json({
     message: "Admin created",
     user: {
       id: admin._id,
-      fullname: admin.fullname,
+      fullName: admin.fullname,
       email: admin.email,
       role: admin.role,
     },

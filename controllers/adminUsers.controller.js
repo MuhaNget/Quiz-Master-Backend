@@ -27,14 +27,18 @@ exports.listUsers = asyncHandler(async (req, res) => {
 
 // GET /users/:id
 exports.getUser = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ _id: req.params.id, role: "user" }).select(
-    "-password",
-  );
+  const user = await User.findOne({ _id: req.params.id, role: "user" })
+    .select("-password")
+    .lean();
   if (!user) {
     res.status(404);
     throw new Error("User not found");
   }
-  res.json(user);
+  res.json({
+    ...user,
+    fullName: user.fullname,
+    id: user._id,
+  });
 });
 
 // POST /users
@@ -52,7 +56,7 @@ exports.createUser = asyncHandler(async (req, res) => {
   const user = await User.create({ fullname, email, password, role: "user" });
   res.status(201).json({
     id: user._id,
-    fullname: user.fullname,
+    fullName: user.fullname,
     email: user.email,
     role: user.role,
   });
@@ -76,7 +80,7 @@ exports.updateUser = asyncHandler(async (req, res) => {
 
   res.json({
     id: user._id,
-    fullname: user.fullname,
+    fullName: user.fullname,
     email: user.email,
     role: user.role,
   });
