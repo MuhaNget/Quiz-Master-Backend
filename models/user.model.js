@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema(
         password: { type: String, required: true, select: false },
         joinedAt: { type: Date, default: Date.now },
         lastActive: { type: Date, default: Date.now },
-        role: { type: String, enum: ["user", "admin"], default: "user" },
+        role: { type: String, enum: ["user", "admin", "super_admin"], default: "user" },
         totalPoints: { type: Number, default: 0 },
         totalQuizzes: { type: Number, default: 0 },
         streak: { type: Number, default: 0 },
