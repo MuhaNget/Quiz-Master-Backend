@@ -1,4 +1,5 @@
 const asyncHandler = require("express-async-handler");
+const mongoose = require("mongoose");
 const Question = require("../models/question.model");
 const Category = require("../models/category.model");
 
@@ -6,6 +7,7 @@ const Category = require("../models/category.model");
 exports.listQuestionsGrouped = asyncHandler(async (req, res) => {
   const questions = await Question.find()
     .populate("category", "name")
+    .populate("author", "fullname email role")
     .select("+correctAnswer")
     .lean();
 
@@ -16,12 +18,22 @@ exports.listQuestionsGrouped = asyncHandler(async (req, res) => {
     grouped[categoryName].push({
       id: q._id,
       category: q.category,
+      author: q.author
+        ? {
+            id: q.author._id,
+            fullName: q.author.fullname,
+            email: q.author.email,
+            role: q.author.role,
+          }
+        : null,
       question: q.question,
       options: q.options,
       correctAnswer: q.correctAnswer,
       timer: q.timer,
       score: q.score,
       difficulty: q.difficulty,
+      createdAt: q.createdAt,
+      updatedAt: q.updatedAt,
     });
   }
 
@@ -32,12 +44,32 @@ exports.listQuestionsGrouped = asyncHandler(async (req, res) => {
 exports.getQuestion = asyncHandler(async (req, res) => {
   const q = await Question.findById(req.params.id)
     .populate("category", "name")
+    .populate("author", "fullname email role")
     .select("+correctAnswer");
   if (!q) {
     res.status(404);
     throw new Error("Not found");
   }
-  res.json(q);
+  res.json({
+    id: q._id,
+    category: q.category,
+    author: q.author
+      ? {
+          id: q.author._id,
+          fullName: q.author.fullname,
+          email: q.author.email,
+          role: q.author.role,
+        }
+      : null,
+    question: q.question,
+    options: q.options,
+    correctAnswer: q.correctAnswer,
+    timer: q.timer,
+    score: q.score,
+    difficulty: q.difficulty,
+    createdAt: q.createdAt,
+    updatedAt: q.updatedAt,
+  });
 });
 
 // POST /questions
@@ -49,22 +81,49 @@ exports.createQuestion = asyncHandler(async (req, res) => {
     correctAnswer,
     timer,
     score,
+    point,
     difficulty,
   } = req.body;
   if (!category || !question || !options || !correctAnswer) {
     res.status(400);
     throw new Error("Missing fields");
   }
+  let categoryId = category;
+  if (!mongoose.Types.ObjectId.isValid(category)) {
+    const foundCategory = await Category.findOne({ name: category }).select(
+      "_id",
+    );
+    if (!foundCategory) {
+      res.status(400);
+      throw new Error("Invalid category");
+    }
+    categoryId = foundCategory._id;
+  }
+
+  let normalizedCorrectAnswer = correctAnswer;
+  const parsedAnswer =
+    typeof correctAnswer === "string" ? parseInt(correctAnswer, 10) : null;
+  const numericAnswer =
+    typeof correctAnswer === "number" ? correctAnswer : parsedAnswer;
+  if (Number.isInteger(numericAnswer) && Array.isArray(options)) {
+    if (numericAnswer >= 0 && numericAnswer < options.length) {
+      normalizedCorrectAnswer = options[numericAnswer];
+    } else if (numericAnswer >= 1 && numericAnswer <= options.length) {
+      normalizedCorrectAnswer = options[numericAnswer - 1];
+    }
+  }
+
   const q = await Question.create({
-    category,
+    category: categoryId,
+    author: req.user._id,
     question,
     options,
-    correctAnswer,
+    correctAnswer: normalizedCorrectAnswer,
     timer,
-    score,
+    score: score ?? point,
     difficulty,
   });
-  await Category.findByIdAndUpdate(category, { $inc: { questionsCount: 1 } });
+  await Category.findByIdAndUpdate(categoryId, { $inc: { questionsCount: 1 } });
   res.status(201).json(q);
 });
 
@@ -77,7 +136,23 @@ exports.updateQuestion = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Not found");
   }
-  res.json(q);
+  const populated = await Question.findById(q._id)
+    .populate("category", "name")
+    .populate("author", "fullname email role")
+    .select("+correctAnswer")
+    .lean();
+  res.json({
+    ...populated,
+    id: populated._id,
+    author: populated.author
+      ? {
+          id: populated.author._id,
+          fullName: populated.author.fullname,
+          email: populated.author.email,
+          role: populated.author.role,
+        }
+      : null,
+  });
 });
 
 // DELETE /questions/:id
