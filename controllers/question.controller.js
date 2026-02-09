@@ -59,13 +59,47 @@ exports.createQuestion = asyncHandler(async (req, res) => {
 });
 
 exports.updateQuestion = asyncHandler(async (req, res) => {
-  const q = await Question.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
-  if (!q) {
+  const { category, ...updateData } = req.body;
+  let finalUpdateData = updateData;
+
+  // Get the current question to check old category
+  const currentQuestion = await Question.findById(req.params.id);
+  if (!currentQuestion) {
     res.status(404);
     throw new Error("Not found");
   }
+
+  // Handle category update
+  if (category) {
+    let categoryId = category;
+    if (!mongoose.Types.ObjectId.isValid(category)) {
+      const foundCategory = await Category.findOne({ name: category }).select(
+        "_id",
+      );
+      if (!foundCategory) {
+        res.status(400);
+        throw new Error("Invalid category");
+      }
+      categoryId = foundCategory._id;
+    }
+
+    finalUpdateData.category = categoryId;
+
+    // Update question counts if category changed
+    if (currentQuestion.category.toString() !== categoryId.toString()) {
+      await Category.findByIdAndUpdate(currentQuestion.category, {
+        $inc: { questionsCount: -1 },
+      });
+      await Category.findByIdAndUpdate(categoryId, {
+        $inc: { questionsCount: 1 },
+      });
+    }
+  }
+
+  const q = await Question.findByIdAndUpdate(req.params.id, finalUpdateData, {
+    new: true,
+  });
+
   res.json(q);
 });
 
