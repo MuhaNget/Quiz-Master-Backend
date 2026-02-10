@@ -36,7 +36,10 @@ exports.activities = asyncHandler(async (req, res) => {
 });
 
 exports.updateProfile = asyncHandler(async (req, res) => {
-  const updates = (({ fullname, email }) => ({ fullname, email }))(req.body);
+  const { fullname, fullName, email } = req.body;
+  const updates = {};
+  if (fullname || fullName) updates.fullname = fullname || fullName;
+  if (email) updates.email = email;
   const user = await User.findByIdAndUpdate(req.params.id, updates, {
     new: true,
   }).select("-password");

@@ -6,8 +6,9 @@ const sendEmail = require("../utils/email");
 
 // POST /api/v1/auth/register
 exports.register = asyncHandler(async (req, res) => {
-  const { fullname, email, password, confirm_password } = req.body;
-  if (!fullname || !email || !password || !confirm_password) {
+  const { fullname, fullName, email, password, confirm_password } = req.body;
+  const name = fullname || fullName;
+  if (!name || !email || !password || !confirm_password) {
     res.status(400);
     throw new Error("All fields are required");
   }
@@ -20,12 +21,11 @@ exports.register = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Email already registered");
   }
-  const user = await User.create({ fullname, email, password });
+  const user = await User.create({ fullname: name, email, password });
   res.status(201).json({
     message: "Registration successful",
     user: {
       id: user._id,
-      fullname: user.fullname,
       fullName: user.fullname,
       email: user.email,
       role: user.role,
