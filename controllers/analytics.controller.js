@@ -69,6 +69,30 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     timestamp: a.createdAt,
   }));
 
+  // Category performance stats
+  const categoryAttemptsAgg = await QuizAttempt.aggregate([
+    { $group: { _id: "$category", totalAttempts: { $sum: 1 } } },
+  ]);
+
+  const categoryQuestionsAgg = await Question.aggregate([
+    { $group: { _id: "$category", totalQuestions: { $sum: 1 } } },
+  ]);
+
+  const categoryStats = {};
+  categoryAttemptsAgg.forEach((c) => {
+    const catId = c._id.toString();
+    categoryStats[catId] = { totalAttempts: c.totalAttempts, totalQuestions: 0 };
+  });
+
+  categoryQuestionsAgg.forEach((c) => {
+    const catId = c._id.toString();
+    if (categoryStats[catId]) {
+      categoryStats[catId].totalQuestions = c.totalQuestions;
+    } else {
+      categoryStats[catId] = { totalAttempts: 0, totalQuestions: c.totalQuestions };
+    }
+  });
+
   res.json({
     totalUsers,
     totalReviews,
@@ -77,5 +101,50 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     userGrowth,
     popularCategories,
     recentActivity,
+    categoryStats,
   });
+});
+
+// GET /analytics/category-performance
+exports.getCategoryPerformance = asyncHandler(async (req, res) => {
+  // Get all categories with their attempt counts
+  const categoryAttemptsAgg = await QuizAttempt.aggregate([
+    { $group: { _id: "$category", totalAttempts: { $sum: 1 } } },
+  ]);
+
+  // Get all categories with their question counts
+  const categoryQuestionsAgg = await Question.aggregate([
+    { $group: { _id: "$category", totalQuestions: { $sum: 1 } } },
+  ]);
+
+  // Get all category details
+  const allCategories = await Category.find().lean();
+  
+  // Build a map for easy lookup
+  const attemptsMap = new Map(
+    categoryAttemptsAgg.map((c) => [c._id.toString(), c.totalAttempts])
+  );
+  const questionsMap = new Map(
+    categoryQuestionsAgg.map((c) => [c._id.toString(), c.totalQuestions])
+  );
+
+  // Build the response
+  const categoryPerformance = allCategories.map((category) => {
+    const catId = category._id.toString();
+    const totalAttempts = attemptsMap.get(catId) || 0;
+    const totalQuestions = questionsMap.get(catId) || 0;
+    const avgAttemptsPerQuestion = totalQuestions > 0 
+      ? Number((totalAttempts / totalQuestions).toFixed(2))
+      : 0;
+
+    return {
+      categoryId: catId,
+      categoryName: category.name,
+      totalQuestions,
+      totalAttempts,
+      avgAttemptsPerQuestion,
+    };
+  });
+
+  res.json({ categoryPerformance });
 });
