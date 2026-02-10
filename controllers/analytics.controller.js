@@ -81,7 +81,10 @@ exports.getDashboard = asyncHandler(async (req, res) => {
   const categoryStats = {};
   categoryAttemptsAgg.forEach((c) => {
     const catId = c._id.toString();
-    categoryStats[catId] = { totalAttempts: c.totalAttempts, totalQuestions: 0 };
+    categoryStats[catId] = {
+      totalAttempts: c.totalAttempts,
+      totalQuestions: 0,
+    };
   });
 
   categoryQuestionsAgg.forEach((c) => {
@@ -89,7 +92,10 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     if (categoryStats[catId]) {
       categoryStats[catId].totalQuestions = c.totalQuestions;
     } else {
-      categoryStats[catId] = { totalAttempts: 0, totalQuestions: c.totalQuestions };
+      categoryStats[catId] = {
+        totalAttempts: 0,
+        totalQuestions: c.totalQuestions,
+      };
     }
   });
 
@@ -119,13 +125,13 @@ exports.getCategoryPerformance = asyncHandler(async (req, res) => {
 
   // Get all category details
   const allCategories = await Category.find().lean();
-  
+
   // Build a map for easy lookup
   const attemptsMap = new Map(
-    categoryAttemptsAgg.map((c) => [c._id.toString(), c.totalAttempts])
+    categoryAttemptsAgg.map((c) => [c._id.toString(), c.totalAttempts]),
   );
   const questionsMap = new Map(
-    categoryQuestionsAgg.map((c) => [c._id.toString(), c.totalQuestions])
+    categoryQuestionsAgg.map((c) => [c._id.toString(), c.totalQuestions]),
   );
 
   // Build the response
@@ -133,9 +139,10 @@ exports.getCategoryPerformance = asyncHandler(async (req, res) => {
     const catId = category._id.toString();
     const totalAttempts = attemptsMap.get(catId) || 0;
     const totalQuestions = questionsMap.get(catId) || 0;
-    const avgAttemptsPerQuestion = totalQuestions > 0 
-      ? Number((totalAttempts / totalQuestions).toFixed(2))
-      : 0;
+    const avgAttemptsPerQuestion =
+      totalQuestions > 0
+        ? Number((totalAttempts / totalQuestions).toFixed(2))
+        : 0;
 
     return {
       categoryId: catId,
