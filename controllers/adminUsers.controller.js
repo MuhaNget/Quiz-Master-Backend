@@ -17,11 +17,15 @@ exports.listUsers = asyncHandler(async (req, res) => {
   }
 
   const users = await User.find(filter).select("-password").lean();
-  const formattedUsers = users.map((u) => ({
-    ...u,
-    fullName: u.fullname,
-    id: u._id,
-  }));
+  const formattedUsers = users.map((u) => {
+    const { fullname, _id, ...rest } = u;
+    return {
+      id: _id,
+      fullName: fullname,
+      ...rest,
+      longestStreak: u.longestStreak ?? 0,
+    };
+  });
   res.json(formattedUsers);
 });
 
@@ -34,10 +38,12 @@ exports.getUser = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("User not found");
   }
+  const { fullname, _id, ...rest } = user;
   res.json({
-    ...user,
-    fullName: user.fullname,
-    id: user._id,
+    id: _id,
+    fullName: fullname,
+    ...rest,
+    longestStreak: user.longestStreak ?? 0,
   });
 });
 

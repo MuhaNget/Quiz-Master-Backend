@@ -14,6 +14,7 @@ exports.getStats = asyncHandler(async (req, res) => {
         total_quizzes: user.totalQuizzes || 0,
         total_points: user.totalPoints || 0,
         streak: user.streak || 0,
+        longest_streak: user.longestStreak || 0,
     };
     res.json(data);
 });

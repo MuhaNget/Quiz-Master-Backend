@@ -60,18 +60,33 @@ exports.bootstrapAdmin = asyncHandler(async (req, res) => {
 exports.listUsers = asyncHandler(async (req, res) => {
   const { role } = req.query;
   const filter = role ? { role } : {};
-  const users = await User.find(filter).select("-password");
-  res.json(users);
+  const users = await User.find(filter).select("-password").lean();
+  const formattedUsers = users.map((u) => {
+    const { fullname, _id, ...rest } = u;
+    return {
+      id: _id,
+      fullName: fullname,
+      ...rest,
+      longestStreak: u.longestStreak ?? 0,
+    };
+  });
+  res.json(formattedUsers);
 });
 
 // GET /api/v1/admin/users/:id
 exports.getUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id).select("-password");
+  const user = await User.findById(req.params.id).select("-password").lean();
   if (!user) {
     res.status(404);
     throw new Error("User not found");
   }
-  res.json(user);
+  const { fullname, _id, ...rest } = user;
+  res.json({
+    id: _id,
+    fullName: fullname,
+    ...rest,
+    longestStreak: user.longestStreak ?? 0,
+  });
 });
 
 // PATCH /api/v1/admin/users/:id/role

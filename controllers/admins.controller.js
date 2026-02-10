@@ -8,11 +8,15 @@ exports.listAdmins = asyncHandler(async (req, res) => {
   })
     .select("-password")
     .lean();
-  const formattedAdmins = admins.map((a) => ({
-    ...a,
-    fullName: a.fullname,
-    id: a._id,
-  }));
+  const formattedAdmins = admins.map((a) => {
+    const { fullname, _id, ...rest } = a;
+    return {
+      id: _id,
+      fullName: fullname,
+      ...rest,
+      longestStreak: a.longestStreak ?? 0,
+    };
+  });
   res.json(formattedAdmins);
 });
 
@@ -28,10 +32,12 @@ exports.getAdmin = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("Admin not found");
   }
+  const { fullname, _id, ...rest } = admin;
   res.json({
-    ...admin,
-    fullName: admin.fullname,
-    id: admin._id,
+    id: _id,
+    fullName: fullname,
+    ...rest,
+    longestStreak: admin.longestStreak ?? 0,
   });
 });
 
