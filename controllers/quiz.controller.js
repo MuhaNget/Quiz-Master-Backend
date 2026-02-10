@@ -68,8 +68,32 @@ exports.submitQuiz = asyncHandler(async (req, res) => {
     });
     // update user aggregates
     const User = require("../models/user.model");
+    const user = await User.findById(req.user._id);
+
+    // Calculate streak (increments only once per day)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const lastActiveDate = new Date(user.lastActive);
+    lastActiveDate.setHours(0, 0, 0, 0);
+
+    const daysDiff = Math.floor((today - lastActiveDate) / (1000 * 60 * 60 * 24));
+
+    let newStreak = user.streak;
+    if (daysDiff === 0) {
+        // Already did a quiz today, don't increment
+        newStreak = user.streak;
+    } else if (daysDiff === 1) {
+        // Did a quiz yesterday, increment
+        newStreak = user.streak + 1;
+    } else {
+        // More than 1 day gap, reset to 1
+        newStreak = 1;
+    }
+
     await User.findByIdAndUpdate(req.user._id, {
         $inc: { totalPoints: score, totalQuizzes: 1 },
+        streak: newStreak,
+        lastActive: new Date(),
     });
     res.json({
         score: `${score}`,
