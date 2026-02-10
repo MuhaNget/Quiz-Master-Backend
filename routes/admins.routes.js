@@ -7,7 +7,11 @@ const {
   updateAdmin,
   deleteAdmin,
 } = require("../controllers/admins.controller");
-const { protect, adminOnly, superAdminOnly } = require("../middlewares/auth.middleware");
+const {
+  protect,
+  adminOnly,
+  superAdminOnly,
+} = require("../middlewares/auth.middleware");
 
 router.get("/", protect, adminOnly, listAdmins);
 router.get("/:id", protect, adminOnly, getAdmin);
