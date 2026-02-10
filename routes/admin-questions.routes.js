@@ -7,12 +7,16 @@ const {
   updateQuestion,
   deleteQuestion,
 } = require("../controllers/adminQuestions.controller");
-const { protect, adminOnly } = require("../middlewares/auth.middleware");
+const {
+  protect,
+  adminOnly,
+  superAdminOnly,
+} = require("../middlewares/auth.middleware");
 
 router.get("/", protect, adminOnly, listQuestionsGrouped);
 router.get("/:id", protect, adminOnly, getQuestion);
 router.post("/", protect, adminOnly, createQuestion);
 router.put("/:id", protect, adminOnly, updateQuestion);
-router.delete("/:id", protect, adminOnly, deleteQuestion);
+router.delete("/:id", protect, superAdminOnly, deleteQuestion);
 
 module.exports = router;

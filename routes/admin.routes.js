@@ -8,7 +8,11 @@ const {
   deleteUser,
   getAdminStats,
 } = require("../controllers/admin.controller");
-const { protect, adminOnly } = require("../middlewares/auth.middleware");
+const {
+  protect,
+  adminOnly,
+  superAdminOnly,
+} = require("../middlewares/auth.middleware");
 
 // Bootstrap first admin (no auth, guarded by setup key)
 router.post("/bootstrap", bootstrapAdmin);
@@ -18,6 +22,6 @@ router.get("/stats", protect, adminOnly, getAdminStats);
 router.get("/users", protect, adminOnly, listUsers);
 router.get("/users/:id", protect, adminOnly, getUser);
 router.patch("/users/:id/role", protect, adminOnly, updateUserRole);
-router.delete("/users/:id", protect, adminOnly, deleteUser);
+router.delete("/users/:id", protect, superAdminOnly, deleteUser);
 
 module.exports = router;

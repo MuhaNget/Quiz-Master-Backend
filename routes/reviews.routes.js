@@ -5,10 +5,14 @@ const {
   getReview,
   deleteReview,
 } = require("../controllers/reviews.controller");
-const { protect, adminOnly } = require("../middlewares/auth.middleware");
+const {
+  protect,
+  adminOnly,
+  superAdminOnly,
+} = require("../middlewares/auth.middleware");
 
 router.get("/", protect, adminOnly, listReviews);
 router.get("/:id", protect, adminOnly, getReview);
-router.delete("/:id", protect, adminOnly, deleteReview);
+router.delete("/:id", protect, superAdminOnly, deleteReview);
 
 module.exports = router;
