@@ -4,67 +4,67 @@ const QuizAttempt = require("../models/quiz.model");
 
 // GET stats
 exports.getStats = asyncHandler(async (req, res) => {
-    const userId = req.params.id;
-    const user = await User.findById(userId).lean();
-    if (!user) {
-        res.status(404);
-        throw new Error("User not found");
-    }
-    const data = {
-        total_quizzes: user.totalQuizzes || 0,
-        total_points: user.totalPoints || 0,
-        streak: user.streak || 0,
-        longest_streak: user.longestStreak || 0,
-    };
-    res.json(data);
+  const userId = req.params.id;
+  const user = await User.findById(userId).lean();
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+  const data = {
+    total_quizzes: user.totalQuizzes || 0,
+    total_points: user.totalPoints || 0,
+    streak: user.streak || 0,
+    longest_streak: user.longestStreak || 0,
+  };
+  res.json(data);
 });
 
 // activities
 exports.activities = asyncHandler(async (req, res) => {
-    const userId = req.params.id;
-    const acts = await QuizAttempt.find({ user: userId })
-        .sort({ takenAt: -1 })
-        .limit(20)
-        .populate("category", "name");
-    const formatted = acts.map(a => ({
-        category: a.category.name,
-        score: a.score,
-        percentage: a.percentage,
-        takenAt: a.takenAt,
-    }));
-    res.json(formatted);
+  const userId = req.params.id;
+  const acts = await QuizAttempt.find({ user: userId })
+    .sort({ takenAt: -1 })
+    .limit(20)
+    .populate("category", "name");
+  const formatted = acts.map((a) => ({
+    category: a.category.name,
+    score: a.score,
+    percentage: a.percentage,
+    takenAt: a.takenAt,
+  }));
+  res.json(formatted);
 });
 
 exports.updateProfile = asyncHandler(async (req, res) => {
-    const updates = (({ fullname, email }) => ({ fullname, email }))(req.body);
-    const user = await User.findByIdAndUpdate(req.params.id, updates, {
-        new: true,
-    }).select("-password");
-    res.json(user);
+  const updates = (({ fullname, email }) => ({ fullname, email }))(req.body);
+  const user = await User.findByIdAndUpdate(req.params.id, updates, {
+    new: true,
+  }).select("-password");
+  res.json(user);
 });
 
 exports.updatePassword = asyncHandler(async (req, res) => {
-    const { oldPassword, newPassword, confirmPassword } = req.body;
-    const user = await User.findById(req.params.id).select("+password");
-    if (!user) {
-        res.status(404);
-        throw new Error("User not found");
-    }
-    const ok = await user.matchPassword(oldPassword);
-    if (!ok) {
-        res.status(400);
-        throw new Error("Old password incorrect");
-    }
-    if (newPassword !== confirmPassword) {
-        res.status(400);
-        throw new Error("Passwords do not match");
-    }
-    user.password = newPassword;
-    await user.save();
-    res.json({ message: "Password updated" });
+  const { oldPassword, newPassword, confirmPassword } = req.body;
+  const user = await User.findById(req.params.id).select("+password");
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+  const ok = await user.matchPassword(oldPassword);
+  if (!ok) {
+    res.status(400);
+    throw new Error("Old password incorrect");
+  }
+  if (newPassword !== confirmPassword) {
+    res.status(400);
+    throw new Error("Passwords do not match");
+  }
+  user.password = newPassword;
+  await user.save();
+  res.json({ message: "Password updated" });
 });
 
 exports.deleteAccount = asyncHandler(async (req, res) => {
-    await User.findByIdAndDelete(req.params.id);
-    res.json({ message: "Account deleted" });
+  await User.findByIdAndDelete(req.params.id);
+  res.json({ message: "Account deleted" });
 });
