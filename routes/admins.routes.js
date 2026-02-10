@@ -7,10 +7,10 @@ const {
   updateAdmin,
   deleteAdmin,
 } = require("../controllers/admins.controller");
-const { protect, superAdminOnly } = require("../middlewares/auth.middleware");
+const { protect, adminOnly, superAdminOnly } = require("../middlewares/auth.middleware");
 
-router.get("/", protect, superAdminOnly, listAdmins);
-router.get("/:id", protect, superAdminOnly, getAdmin);
+router.get("/", protect, adminOnly, listAdmins);
+router.get("/:id", protect, adminOnly, getAdmin);
 router.post("/", protect, superAdminOnly, createAdmin);
 router.put("/:id", protect, superAdminOnly, updateAdmin);
 router.delete("/:id", protect, superAdminOnly, deleteAdmin);
