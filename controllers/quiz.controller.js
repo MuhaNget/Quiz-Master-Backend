@@ -88,9 +88,13 @@ exports.submitQuiz = asyncHandler(async (req, res) => {
     newStreak = 1;
   }
 
+  // Update longestStreak if current streak is higher
+  const newLongestStreak = Math.max(user.longestStreak || 0, newStreak);
+
   await User.findByIdAndUpdate(req.user._id, {
     $inc: { totalPoints: score, totalQuizzes: 1 },
     streak: newStreak,
+    longestStreak: newLongestStreak,
     lastActive: new Date(),
   });
   res.json({

@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema(
         totalPoints: { type: Number, default: 0 },
         totalQuizzes: { type: Number, default: 0 },
         streak: { type: Number, default: 0 },
+        longestStreak: { type: Number, default: 0 },
     },
     { timestamps: true }
 );
