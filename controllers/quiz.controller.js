@@ -20,7 +20,15 @@ exports.startQuiz = asyncHandler(async (req, res) => {
   const pipeline = [
     { $match: { category: new mongoose.Types.ObjectId(category_id) } },
     { $sample: { size: 10 } },
-    { $project: { question: 1, options: 1, timer: 1, score: 1 } },
+    {
+      $project: {
+        question: 1,
+        options: 1,
+        correctAnswer: 1,
+        timer: 1,
+        score: 1,
+      },
+    },
   ];
   const questions = await Question.aggregate(pipeline);
   res.json({ category: category.name, questions });
