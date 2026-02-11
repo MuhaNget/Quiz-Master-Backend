@@ -18,7 +18,7 @@ exports.startQuiz = asyncHandler(async (req, res) => {
   }
   // pick 10 random questions
   const pipeline = [
-    { $match: { category: mongoose.Types.ObjectId(category_id) } },
+    { $match: { category: new mongoose.Types.ObjectId(category_id) } },
     { $sample: { size: 10 } },
     { $project: { question: 1, options: 1, timer: 1, score: 1 } },
   ];
