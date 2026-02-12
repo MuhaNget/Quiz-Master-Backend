@@ -44,12 +44,22 @@ exports.submitQuiz = asyncHandler(async (req, res) => {
   // compute score
   let score = 0,
     correct = 0,
-    wrong = 0;
+    wrong = 0,
+    totalScores = 0;
   const detailed = [];
   for (const a of answers) {
     const q = await Question.findById(a.question_id).select("+correctAnswer");
     if (!q) continue;
-    const isCorrect = q.correctAnswer === a.selected_option;
+    totalScores += q.score;
+
+    // Handle both index and string correctAnswer
+    let correctAnswerText = q.correctAnswer;
+    const numericIndex = parseInt(q.correctAnswer, 10);
+    if (!isNaN(numericIndex) && q.options[numericIndex] !== undefined) {
+      correctAnswerText = q.options[numericIndex];
+    }
+
+    const isCorrect = correctAnswerText === a.selected_option;
     if (isCorrect) {
       score += q.score;
       correct++;
@@ -62,7 +72,8 @@ exports.submitQuiz = asyncHandler(async (req, res) => {
       isCorrect,
     });
   }
-  const percentage = Math.round((score / (answers.length * 10)) * 100); // assume max score per question 10 if not set
+  const percentage =
+    totalScores > 0 ? Math.round((score / totalScores) * 100) : 0;
   const attempt = await QuizAttempt.create({
     user: req.user._id,
     category: category_id,
@@ -105,11 +116,26 @@ exports.submitQuiz = asyncHandler(async (req, res) => {
     longestStreak: newLongestStreak,
     lastActive: new Date(),
   });
+
+  // Generate dynamic comment based on percentage
+  let comment = "Good job!";
+  if (percentage >= 90) {
+    comment = "Outstanding! Perfect performance!";
+  } else if (percentage >= 80) {
+    comment = "Excellent work!";
+  } else if (percentage >= 70) {
+    comment = "Good job!";
+  } else if (percentage >= 60) {
+    comment = "Not bad! Keep practicing.";
+  } else {
+    comment = "Keep learning and try again!";
+  }
+
   res.json({
     score: `${score}`,
     percentage,
     correct_answers: correct,
     wrong_answers: wrong,
-    comment: "Good job!",
+    comment,
   });
 });
