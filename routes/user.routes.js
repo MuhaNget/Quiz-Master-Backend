@@ -7,12 +7,12 @@ const {
   deleteAccount,
   activities,
 } = require("../controllers/user.controller");
-const { protect, superAdminOnly } = require("../middlewares/auth.middleware");
+const { protect } = require("../middlewares/auth.middleware");
 
 router.get("/:id/stats", protect, getStats);
 router.get("/:id/activities", protect, activities);
 router.patch("/:id", protect, updateProfile);
 router.patch("/:id/password", protect, updatePassword);
-router.delete("/:id", protect, superAdminOnly, deleteAccount);
+router.delete("/:id", protect, deleteAccount);
 
 module.exports = router;

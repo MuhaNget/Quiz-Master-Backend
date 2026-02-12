@@ -68,6 +68,18 @@ exports.updatePassword = asyncHandler(async (req, res) => {
 });
 
 exports.deleteAccount = asyncHandler(async (req, res) => {
-  await User.findByIdAndDelete(req.params.id);
+  const userIdToDelete = req.params.id;
+  const requestingUser = req.user;
+
+  // Check if user is deleting their own account OR is a super admin
+  const isOwnAccount = requestingUser._id.toString() === userIdToDelete;
+  const isSuperAdmin = requestingUser.role === "superAdmin";
+
+  if (!isOwnAccount && !isSuperAdmin) {
+    res.status(403);
+    throw new Error("You can only delete your own account");
+  }
+
+  await User.findByIdAndDelete(userIdToDelete);
   res.json({ message: "Account deleted" });
 });
