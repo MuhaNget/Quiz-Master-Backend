@@ -1,6 +1,39 @@
 const asyncHandler = require("express-async-handler");
 const Review = require("../models/review.model");
 
+// POST /reviews
+exports.createReview = asyncHandler(async (req, res) => {
+  const { userName, userEmail, rating, feedback } = req.body;
+
+  if (!userName || !userEmail || rating === undefined) {
+    res.status(400);
+    throw new Error("Missing required fields: userName, userEmail, rating");
+  }
+
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    res.status(400);
+    throw new Error("Rating must be an integer between 1 and 5");
+  }
+
+  const review = await Review.create({
+    userId: req.user._id,
+    userName,
+    userEmail,
+    rating,
+    feedback: feedback || null,
+  });
+
+  res.status(201).json({
+    id: review._id,
+    userId: review.userId,
+    userName: review.userName,
+    userEmail: review.userEmail,
+    rating: review.rating,
+    feedback: review.feedback,
+    createdAt: review.createdAt,
+  });
+});
+
 // GET /reviews
 exports.listReviews = asyncHandler(async (req, res) => {
   const page = parseInt(req.query.page || "1");
