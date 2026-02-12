@@ -11,6 +11,9 @@ router.use("/leaderboard", require("./leaderboard.routes"));
 router.use("/public/categories", require("./category.routes"));
 router.use("/public/questions", require("./question.routes"));
 
+// User routes
+router.use("/user", require("./user.routes"));
+
 // Admin panel routes (v1 base)
 router.use("/admins", require("./admins.routes"));
 router.use("/users", require("./admin-users.routes"));
