@@ -90,20 +90,23 @@ exports.submitQuiz = asyncHandler(async (req, res) => {
   // Calculate streak (increments only once per day)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const lastActiveDate = new Date(user.lastActive);
+
+  const lastActiveDate = user.lastActive
+    ? new Date(user.lastActive)
+    : new Date(0);
   lastActiveDate.setHours(0, 0, 0, 0);
 
   const daysDiff = Math.floor((today - lastActiveDate) / (1000 * 60 * 60 * 24));
 
-  let newStreak = user.streak;
+  let newStreak = user.streak || 0;
   if (daysDiff === 0) {
     // Already did a quiz today, don't increment
-    newStreak = user.streak;
+    newStreak = user.streak || 0;
   } else if (daysDiff === 1) {
     // Did a quiz yesterday, increment
-    newStreak = user.streak + 1;
+    newStreak = (user.streak || 0) + 1;
   } else {
-    // More than 1 day gap, reset to 1
+    // More than 1 day gap or new user, reset to 1
     newStreak = 1;
   }
 

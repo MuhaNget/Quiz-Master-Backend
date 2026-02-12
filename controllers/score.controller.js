@@ -12,10 +12,10 @@ exports.overview = asyncHandler(async (req, res) => {
   const avgPerc = total
     ? Math.round(attempts.reduce((s, a) => s + a.percentage, 0) / total)
     : 0;
-  
+
   // best performance
   const best = attempts.sort((a, b) => b.percentage - a.percentage)[0];
-  
+
   // Group attempts by category
   const categoryMap = {};
   attempts.forEach((attempt) => {
@@ -30,14 +30,15 @@ exports.overview = asyncHandler(async (req, res) => {
     }
     categoryMap[categoryId].attempts.push(attempt);
   });
-  
+
   // Calculate stats for each category
   const categories = Object.values(categoryMap).map((cat) => {
     const categoryAttempts = cat.attempts;
     const categoryTotal = categoryAttempts.length;
     const accuracy = categoryTotal
       ? Math.round(
-          categoryAttempts.reduce((s, a) => s + a.percentage, 0) / categoryTotal,
+          categoryAttempts.reduce((s, a) => s + a.percentage, 0) /
+            categoryTotal,
         )
       : 0;
     const bestScore = categoryTotal
@@ -59,7 +60,7 @@ exports.overview = asyncHandler(async (req, res) => {
       averageScore,
     };
   });
-  
+
   res.json({
     total_quizzes: total,
     accuracy: avgPerc,
