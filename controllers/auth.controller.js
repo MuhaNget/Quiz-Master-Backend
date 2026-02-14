@@ -68,17 +68,17 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("No user with that email");
   }
-  const resetToken = crypto.randomBytes(20).toString("hex");
+  const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
   user.resetPasswordToken = resetToken;
   user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
   await user.save();
   // send email (scaffold)
   await sendEmail(
     email,
-    "Password reset",
-    `Use this token to reset your password: ${resetToken}`,
+    "Password Reset PIN",
+    `Your password reset PIN is: ${resetToken}\n\nThis PIN will expire in 1 hour.`,
   );
-  res.json({ message: "Reset token sent to email" });
+  res.json({ message: "Reset PIN sent to email" });
 });
 
 // POST /api/v1/auth/reset-password
