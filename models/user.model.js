@@ -17,6 +17,8 @@ const userSchema = new mongoose.Schema(
     totalQuizzes: { type: Number, default: 0 },
     streak: { type: Number, default: 0 },
     longestStreak: { type: Number, default: 0 },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
   },
   { timestamps: true },
 );

@@ -84,18 +84,27 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
 // POST /api/v1/auth/reset-password
 exports.resetPassword = asyncHandler(async (req, res) => {
   const { token, password, confirm_password } = req.body;
+
+  if (!token || !password) {
+    res.status(400);
+    throw new Error("Token and password are required");
+  }
+
   if (password !== confirm_password) {
     res.status(400);
     throw new Error("Passwords do not match");
   }
+
   const user = await User.findOne({
-    resetPasswordToken: token,
+    resetPasswordToken: token.toString(),
     resetPasswordExpires: { $gt: Date.now() },
-  });
+  }).select("+password");
+
   if (!user) {
     res.status(400);
     throw new Error("Invalid or expired token");
   }
+
   user.password = password;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpires = undefined;
