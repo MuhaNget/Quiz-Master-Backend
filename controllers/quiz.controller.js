@@ -98,27 +98,59 @@ exports.submitQuiz = asyncHandler(async (req, res) => {
 
   const daysDiff = Math.floor((today - lastActiveDate) / (1000 * 60 * 60 * 24));
 
+  console.log("Streak calculation:", {
+    today: today.toISOString(),
+    lastActive: lastActiveDate.toISOString(),
+    daysDiff,
+    currentStreak: user.streak,
+  });
+
   let newStreak = user.streak || 0;
   if (daysDiff === 0) {
-    // Already did a quiz today, don't increment
-    newStreak = user.streak || 0;
+    // Already did a quiz today
+    if (newStreak === 0) {
+      // First quiz ever, initialize to 1
+      newStreak = 1;
+    } else {
+      // Multiple quizzes today, keep current streak
+      newStreak = user.streak;
+    }
   } else if (daysDiff === 1) {
     // Did a quiz yesterday, increment
     newStreak = (user.streak || 0) + 1;
   } else {
-    // More than 1 day gap or new user, reset to 1
+    // More than 1 day gap, reset to 1
     newStreak = 1;
   }
+
+  console.log("New streak:", newStreak);
 
   // Update longestStreak if current streak is higher
   const newLongestStreak = Math.max(user.longestStreak || 0, newStreak);
 
-  await User.findByIdAndUpdate(req.user._id, {
-    $inc: { totalPoints: score, totalQuizzes: 1 },
-    streak: newStreak,
-    longestStreak: newLongestStreak,
-    lastActive: new Date(),
+  console.log("Updating user with:", {
+    newStreak,
+    newLongestStreak,
+    scoreToAdd: score,
   });
+
+  const updateResult = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $inc: { totalPoints: score, totalQuizzes: 1 },
+      streak: newStreak,
+      longestStreak: newLongestStreak,
+      lastActive: new Date(),
+    },
+    { new: true },
+  );
+
+  console.log(
+    "After update - user streak:",
+    updateResult.streak,
+    "longest:",
+    updateResult.longestStreak,
+  );
 
   // Generate dynamic comment based on percentage
   let comment = "Good job!";
