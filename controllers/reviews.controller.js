@@ -48,10 +48,19 @@ exports.listReviews = asyncHandler(async (req, res) => {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
     filter.createdAt = { $gte: start };
-  }
-  if (dateFilter === "last7days") {
+  } else if (dateFilter === "last7days") {
     const start = new Date();
     start.setDate(start.getDate() - 6);
+    start.setHours(0, 0, 0, 0);
+    filter.createdAt = { $gte: start };
+  } else if (dateFilter === "last30days") {
+    const start = new Date();
+    start.setDate(start.getDate() - 29);
+    start.setHours(0, 0, 0, 0);
+    filter.createdAt = { $gte: start };
+  } else if (dateFilter === "last90days") {
+    const start = new Date();
+    start.setDate(start.getDate() - 89);
     start.setHours(0, 0, 0, 0);
     filter.createdAt = { $gte: start };
   }
