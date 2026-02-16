@@ -5,7 +5,34 @@ const Category = require("../models/category.model");
 
 // GET /questions (grouped by category name)
 exports.listQuestionsGrouped = asyncHandler(async (req, res) => {
-  const questions = await Question.find()
+  const search = req.query.search || "";
+  const categoryId = req.query.category;
+  const authorId = req.query.author;
+  const timer = req.query.timer ? parseInt(req.query.timer) : null;
+
+  let filter = {};
+
+  // Search filter
+  if (search) {
+    filter.question = { $regex: search, $options: "i" };
+  }
+
+  // Category filter
+  if (categoryId) {
+    filter.category = new mongoose.Types.ObjectId(categoryId);
+  }
+
+  // Author filter
+  if (authorId) {
+    filter.author = new mongoose.Types.ObjectId(authorId);
+  }
+
+  // Timer filter
+  if (timer) {
+    filter.timer = timer;
+  }
+
+  const questions = await Question.find(filter)
     .populate("category", "name")
     .populate("author", "fullname email role")
     .select("+correctAnswer")
