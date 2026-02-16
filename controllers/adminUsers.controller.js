@@ -4,6 +4,10 @@ const User = require("../models/user.model");
 // GET /users
 exports.listUsers = asyncHandler(async (req, res) => {
   const role = req.query.role;
+  const search = req.query.search || "";
+  const page = parseInt(req.query.page || "1");
+  const limit = parseInt(req.query.limit || "10");
+
   let filter = {};
 
   if (!role) {
@@ -16,7 +20,25 @@ exports.listUsers = asyncHandler(async (req, res) => {
     filter = { role };
   }
 
-  const users = await User.find(filter).select("-password").lean();
+  // Add search filter for name and email
+  if (search) {
+    filter = {
+      ...filter,
+      $or: [
+        { fullname: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ],
+    };
+  }
+
+  const skip = (page - 1) * limit;
+  const total = await User.countDocuments(filter);
+  const users = await User.find(filter)
+    .select("-password")
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
   const formattedUsers = users.map((u) => {
     const { fullname, _id, ...rest } = u;
     return {
@@ -26,7 +48,16 @@ exports.listUsers = asyncHandler(async (req, res) => {
       longestStreak: u.longestStreak ?? 0,
     };
   });
-  res.json(formattedUsers);
+
+  res.json({
+    data: formattedUsers,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
 });
 
 // GET /users/:id
