@@ -3,11 +3,31 @@ const User = require("../models/user.model");
 
 // GET /admins
 exports.listAdmins = asyncHandler(async (req, res) => {
-  const admins = await User.find({
-    role: { $in: ["admin", "super_admin"] },
-  })
+  const search = req.query.search || "";
+  const page = parseInt(req.query.page || "1");
+  const limit = parseInt(req.query.limit || "10");
+
+  let filter = { role: { $in: ["admin", "super_admin"] } };
+
+  // Add search filter for name and email
+  if (search) {
+    filter = {
+      ...filter,
+      $or: [
+        { fullname: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ],
+    };
+  }
+
+  const skip = (page - 1) * limit;
+  const total = await User.countDocuments(filter);
+  const admins = await User.find(filter)
     .select("-password")
+    .skip(skip)
+    .limit(limit)
     .lean();
+
   const formattedAdmins = admins.map((a) => {
     const { fullname, _id, ...rest } = a;
     return {
@@ -17,7 +37,16 @@ exports.listAdmins = asyncHandler(async (req, res) => {
       longestStreak: a.longestStreak ?? 0,
     };
   });
-  res.json(formattedAdmins);
+
+  res.json({
+    data: formattedAdmins,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    },
+  });
 });
 
 // GET /admins/:id
