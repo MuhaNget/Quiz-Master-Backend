@@ -9,6 +9,15 @@ const formatDate = (d) => d.toISOString().slice(0, 10);
 
 // GET /analytics/dashboard
 exports.getDashboard = asyncHandler(async (req, res) => {
+  const timeRange = req.query.timeRange || "7days";
+  let daysBack = 6;
+
+  if (timeRange === "30days") {
+    daysBack = 29;
+  } else if (timeRange === "90days") {
+    daysBack = 89;
+  }
+
   const [totalUsers, totalReviews, totalQuestions, totalAttempts] =
     await Promise.all([
       User.countDocuments(),
@@ -19,7 +28,7 @@ exports.getDashboard = asyncHandler(async (req, res) => {
 
   const now = new Date();
   const start = new Date(now);
-  start.setDate(start.getDate() - 6);
+  start.setDate(start.getDate() - daysBack);
 
   const usersByDay = await User.aggregate([
     { $match: { createdAt: { $gte: start } } },
@@ -34,7 +43,7 @@ exports.getDashboard = asyncHandler(async (req, res) => {
 
   const userGrowthMap = new Map(usersByDay.map((d) => [d._id, d.count]));
   const userGrowth = [];
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i <= daysBack; i++) {
     const day = new Date(start);
     day.setDate(start.getDate() + i);
     const key = formatDate(day);
