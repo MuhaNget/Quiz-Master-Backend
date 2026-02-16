@@ -21,5 +21,6 @@ router.use("/categories", require("./admin-categories.routes"));
 router.use("/questions", require("./admin-questions.routes"));
 router.use("/analytics", require("./analytics.routes"));
 router.use("/reviews", require("./reviews.routes"));
+router.use("/search", require("./search.routes"));
 
 module.exports = router;
